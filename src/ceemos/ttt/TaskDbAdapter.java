@@ -6,13 +6,11 @@ import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 
+import static ceemos.ttt.DatabaseHelper.*;
+
 public class TaskDbAdapter {
 
-    // Database fields
-    public static final String KEY_ROWID = "_id";
-    public static final String KEY_LABEL = "label";
-    public static final String KEY_NOTES = "notes";
-    public static final String KEY_COLOR = "color";
+
     private static final String DATABASE_TABLE = "task";
     private Context context;
     private SQLiteDatabase database;

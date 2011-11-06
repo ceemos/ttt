@@ -2,7 +2,8 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical" >
+    android:orientation="vertical" 
+    android:id="@+id/teskentrylayout">
 
     <TextView
         android:id="@+id/tasktext"
@@ -12,9 +13,17 @@
         android:textAppearance="?android:attr/textAppearanceMedium" />
 
     <LinearLayout
-        android:id="@+id/linearLayout1"
+        android:id="@+id/taskbuttons"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" >
+            
+        <Button
+            android:id="@+id/buttonToDo"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1.2"
+            android:onClick="onTaskTodo"
+            android:text="ToDo" />
 
         <Button
             android:id="@+id/button5min"
@@ -22,7 +31,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:onClick="onTask5min"
-            android:text="5min" />
+            android:text="5" />
 
         <Button
             android:id="@+id/button10min"
