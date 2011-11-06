@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android" >
+    <item android:id="@+id/tbDay" android:title="Day"></item>
+    <item android:id="@+id/tb7Days" android:title="7 Days"></item>
+    <item android:id="@+id/tbWeek" android:title="Week"></item>
+    <item android:id="@+id/tbEver" android:title="Ever"></item>
+
+    
+
+</menu>
