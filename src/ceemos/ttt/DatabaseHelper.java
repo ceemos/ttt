@@ -8,20 +8,23 @@ import android.util.Log;
 public class DatabaseHelper extends SQLiteOpenHelper {
 
     public static final String DATABASE_NAME = "applicationdata";
-    private static final int DATABASE_VERSION = 4;
+    private static final int DATABASE_VERSION = 6;
     // Database fields
     public static final String KEY_ROWID = "_id";
     public static final String KEY_LABEL = "label";
     public static final String KEY_NOTES = "notes";
     public static final String KEY_COLOR = "color";
+    public static final String KEY_PRIORITY = "prio";
     // Database creation sql statement
     private static final String DATABASE_CREATE =
             "create table task (_id integer primary key autoincrement, "
-            + "label text not null, color text not null);"
+            + "label text not null, color text not null, prio integer not null);"
             + "create table todo(_id integer primary key autoincrement, "
-            + "notes text not null, tid integer not null);"
+            + "notes text not null, "
+            + "tid integer not null, foreign key(tid) references task(_id)); "
             + "create table time(_id integer primary key autoincrement, "
-            + "tid integer not null, t integer not null, ts integer not null);";
+            + "t integer not null, ts integer not null, "
+            + "tid integer not null, foreign key(tid) references task(_id));";
 
     public DatabaseHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);

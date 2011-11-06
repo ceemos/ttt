@@ -46,14 +46,25 @@ public class TaskDbAdapter {
     public Cursor fetchAllTasks() {
         return database.query(DATABASE_TABLE, new String[]{KEY_ROWID,
                     KEY_LABEL, KEY_COLOR}, null, null, null,
-                null, null);
+                null, KEY_PRIORITY + " desc");
     }
 
+    public boolean incPriority(long rowId) {
+        Cursor prio = database.query(DATABASE_TABLE, new String[]{KEY_PRIORITY}, KEY_ROWID + "=" + rowId, null, null, null, null);
+        prio.moveToFirst();
+        int p = prio.getInt(prio.getColumnIndex(KEY_PRIORITY));
+        prio.close();
+        ContentValues updateValues = new ContentValues();
+        updateValues.put(KEY_PRIORITY, p + 1);
+        return database.update(DATABASE_TABLE, updateValues, KEY_ROWID + "="
+                + rowId, null) > 0;
+    }
 
     private ContentValues createContentValues(String label, String color) {
         ContentValues values = new ContentValues();
         values.put(KEY_LABEL, label);
         values.put(KEY_COLOR, color);
+        values.put(KEY_PRIORITY, 1);
         return values;
     }
 }

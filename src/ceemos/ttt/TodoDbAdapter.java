@@ -46,7 +46,7 @@ public class TodoDbAdapter {
     }
 
     public boolean deleteTodo(long rowId) {
-        return database.delete(DATABASE_TABLE, KEY_ROWID + "=" + rowId, null) > 0;
+        return database.delete("todo", KEY_ROWID + "=" + rowId, null) > 0;
     }
     
     public long createTodo(String notes, int task_id) {

@@ -52,10 +52,11 @@ public class TttActivity extends TabActivity {
         tasklist.setAdapter(tasks);
         
         cursor = todoHelper.fetchAllTodos();
-        from = new String[]{KEY_LABEL, KEY_NOTES};
-        to = new int[]{R.id.todolabel, R.id.todoextra};
+        from = new String[]{KEY_LABEL, KEY_NOTES, KEY_ROWID};
+        to = new int[]{R.id.todolabel, R.id.todoextra, R.id.tododone};
         SimpleCursorAdapter todos = 
                 new SimpleCursorAdapter(this, R.layout.todoentry, cursor, from, to);
+        todos.setViewBinder(new IdBinder());
         todolist.setAdapter(todos);
         
     }
@@ -64,13 +65,13 @@ public class TttActivity extends TabActivity {
 
         @Override
         public boolean setViewValue(View view, Cursor cursor, int columnIndex) {
-           System.out.println("setViewValue: " + view.getClass().getName() + " id:" + view.getId() + " column:" + columnIndex);
+            //System.out.println("setViewValue: " + view.getClass().getName() + " id:" + view.getId() + " column:" + columnIndex);
             if(columnIndex == 1) {
                 TextView t = (TextView) view;
                 t.setText(cursor.getString(columnIndex));
             } else if (columnIndex == 2) {
                 String color = cursor.getString(columnIndex);
-                int c = Integer.parseInt(color) & 0xFFFFFF;
+                int c = (Integer.parseInt(color) | 0xFF000000) & 0xFF7F7F7F;
                 LinearLayout ll = (LinearLayout) view;
                 ll.setBackgroundColor(c);
             } else if (columnIndex == 0) {
@@ -83,6 +84,19 @@ public class TttActivity extends TabActivity {
             }
             return true;
         }
+    }
+    
+    class IdBinder implements SimpleCursorAdapter.ViewBinder {
+
+        @Override
+        public boolean setViewValue(View view, Cursor cursor, int columnIndex) {
+            if(cursor.getColumnName(columnIndex).equals("_id")){
+                view.setTag(cursor.getInt(columnIndex));
+                return true;
+            }
+            return false;
+        }
+        
     }
 
     /** Called when the activity is first created. */
@@ -151,41 +165,9 @@ public class TttActivity extends TabActivity {
 
     public void onTodoDone(View v) {
         final Button b = (Button) v;
-        if (b.getTag() == null) {
-            b.setText("ToDo");
-            b.setTag(Boolean.TRUE);
-        } else {
-            AlertDialog.Builder alert = new AlertDialog.Builder(this);
-
-            alert.setTitle("Extra");
-            alert.setMessage("Enter Notes");
-
-            // Set an EditText view to get user input 
-            final EditText input = new EditText(this);
-            alert.setView(input);
-
-            alert.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
-
-                @Override
-                public void onClick(DialogInterface dialog, int whichButton) {
-                    String value = input.getText().toString();
-                    LinearLayout ll = (LinearLayout) b.getParent();
-                    TextView tv = (TextView) ll.findViewById(R.id.todoextra);
-                    tv.setText(value);
-                    // Do something with value!
-                }
-            });
-
-            alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-
-                @Override
-                public void onClick(DialogInterface dialog, int whichButton) {
-                    // Canceled.
-                }
-            });
-
-            alert.show();
-        }
+        int id = (Integer) b.getTag();
+        todoHelper.deleteTodo(id);
+        fillData();
 
     }
 
@@ -213,6 +195,7 @@ public class TttActivity extends TabActivity {
             public void onClick(DialogInterface dialog, int whichButton) {
                 String value = input.getText().toString();
                 todoHelper.createTodo(value, id);
+                taskHelper.incPriority(id);
                 fillData();
             }
         });
