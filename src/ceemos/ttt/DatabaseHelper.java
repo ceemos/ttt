@@ -5,7 +5,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
-public class TaskDatabaseHelper extends SQLiteOpenHelper {
+public class DatabaseHelper extends SQLiteOpenHelper {
 	private static final String DATABASE_NAME = "applicationdata";
 
 	private static final int DATABASE_VERSION = 2;
@@ -18,7 +18,7 @@ public class TaskDatabaseHelper extends SQLiteOpenHelper {
 			+ "create table time(_id integer primary key autoincrement, "
 			+ "tid integer not null, t integer not null, ts integer not null);";
 
-	public TaskDatabaseHelper(Context context) {
+	public DatabaseHelper(Context context) {
 		super(context, DATABASE_NAME, null, DATABASE_VERSION);
 	}
 
@@ -33,7 +33,7 @@ public class TaskDatabaseHelper extends SQLiteOpenHelper {
 	@Override
 	public void onUpgrade(SQLiteDatabase database, int oldVersion,
 			int newVersion) {
-		Log.w(TaskDatabaseHelper.class.getName(),
+		Log.w(DatabaseHelper.class.getName(),
 				"Upgrading database from version " + oldVersion + " to "
 						+ newVersion + ", which will destroy all old data");
 		database.execSQL("DROP TABLE IF EXISTS todo");
