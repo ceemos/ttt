@@ -6,11 +6,14 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.view.ContextMenu;
+import android.view.ContextMenu.ContextMenuInfo;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -44,11 +47,11 @@ public class TttActivity extends TabActivity {
         startManagingCursor(cursor);
 
         String[] from = new String[]{KEY_LABEL, KEY_COLOR, KEY_ROWID};
-        int[] to = new int[]{R.id.tasktext, R.id.teskentrylayout, R.id.taskbuttons};
+        int[] to = new int[]{R.id.tasktext, R.id.taskentrylayout, R.id.taskentrylayout};
 
         SimpleCursorAdapter tasks = 
                 new SimpleCursorAdapter(this, R.layout.taskentry, cursor, from, to);
-        tasks.setViewBinder(new TaskViewBinder());
+        tasks.setViewBinder(new Binder());
         tasklist.setAdapter(tasks);
         
         cursor = todoHelper.fetchAllTodos();
@@ -56,42 +59,28 @@ public class TttActivity extends TabActivity {
         to = new int[]{R.id.todolabel, R.id.todoextra, R.id.tododone};
         SimpleCursorAdapter todos = 
                 new SimpleCursorAdapter(this, R.layout.todoentry, cursor, from, to);
-        todos.setViewBinder(new IdBinder());
+        todos.setViewBinder(new Binder());
         todolist.setAdapter(todos);
         
     }
-
-    class TaskViewBinder implements SimpleCursorAdapter.ViewBinder {
-
-        @Override
-        public boolean setViewValue(View view, Cursor cursor, int columnIndex) {
-            //System.out.println("setViewValue: " + view.getClass().getName() + " id:" + view.getId() + " column:" + columnIndex);
-            if(columnIndex == 1) {
-                TextView t = (TextView) view;
-                t.setText(cursor.getString(columnIndex));
-            } else if (columnIndex == 2) {
-                String color = cursor.getString(columnIndex);
-                int c = (Integer.parseInt(color) | 0xFF000000) & 0xFF7F7F7F;
-                LinearLayout ll = (LinearLayout) view;
-                ll.setBackgroundColor(c);
-            } else if (columnIndex == 0) {
-                LinearLayout ll = (LinearLayout) view;
-                for(View v : ll.getTouchables()){
-                    v.setTag(cursor.getInt(columnIndex));
-                }
-            } else {
-                return false;
-            }
-            return true;
-        }
-    }
     
-    class IdBinder implements SimpleCursorAdapter.ViewBinder {
+    class Binder implements SimpleCursorAdapter.ViewBinder {
 
         @Override
         public boolean setViewValue(View view, Cursor cursor, int columnIndex) {
             if(cursor.getColumnName(columnIndex).equals("_id")){
                 view.setTag(cursor.getInt(columnIndex));
+                if(view instanceof LinearLayout) {
+                    LinearLayout ll = (LinearLayout) view;
+                    for (View v : ll.getTouchables()) {
+                        v.setTag(cursor.getInt(columnIndex));
+                    }
+                }
+                return true;
+            } else if (cursor.getColumnName(columnIndex).equals(KEY_COLOR)) {
+                String color = cursor.getString(columnIndex);
+                int c = (Integer.parseInt(color) | 0xFF000000) & 0xFF7F7F7F;
+                view.setBackgroundColor(c);    
                 return true;
             }
             return false;
@@ -162,6 +151,33 @@ public class TttActivity extends TabActivity {
         }
         return true;
     }
+
+    @Override
+    public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
+        if (v.getId() == R.id.listViewTasks) {
+            AdapterView.AdapterContextMenuInfo acmi = (AdapterView.AdapterContextMenuInfo) menuInfo;
+            MenuItem m = menu.add("Remove");
+        }
+        super.onCreateContextMenu(menu, v, menuInfo);
+    }
+
+    @Override
+    public boolean onContextItemSelected(MenuItem item) {
+        if (item.getMenuInfo() instanceof AdapterView.AdapterContextMenuInfo) {
+            AdapterView.AdapterContextMenuInfo acmi = (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
+            if (acmi.targetView.getId() == R.id.taskentrylayout) {
+                int id = (Integer) acmi.targetView.getTag();
+                taskHelper.deleteTask(id);
+                fillData();
+                return true;
+            }
+        }
+        return super.onContextItemSelected(item);
+    }
+    
+    
+    
+    
 
     public void onTodoDone(View v) {
         final Button b = (Button) v;
