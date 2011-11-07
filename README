@@ -1,0 +1,3 @@
+ttt is a small Android application for tracking Tasks, ToDos, and and the Time spent on them.
+
+The program is developed as a Netbeans project not using the Netbeans Android plugin, but a slightly modified Netbeans ant script and some utility programs for running an emulator.
