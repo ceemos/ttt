@@ -21,7 +21,6 @@ import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
 import android.widget.TabHost;
-import android.widget.TextView;
 
 import static ceemos.ttt.DatabaseHelper.*;
 
@@ -107,6 +106,7 @@ public class TttActivity extends TabActivity {
 
         tasklist = (ListView) findViewById(R.id.listViewTasks);
         tasklist.addFooterView(inflater.inflate(R.layout.taskadd, null));
+        registerForContextMenu(tasklist);
 
         editNewTask = (EditText) findViewById(R.id.taskeditnew);
 

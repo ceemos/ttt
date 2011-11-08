@@ -18,8 +18,14 @@ public class Run {
         fs.run(command.split(" "));
         System.out.println("Starting...");
         command = "/opt/android-sdk/platform-tools/adb shell "
-                + "am start -a android.intent.action.MAIN -n ceemos.ttt/ceemos.ttt.TttActivity";
+                + "am start -e debug true -a android.intent.action.MAIN -n ceemos.ttt/ceemos.ttt.TttActivity";
         fs.run(command.split(" "));
+        Process p = Runtime.getRuntime().exec(new String[]{"/opt/android-sdk/platform-tools/adb", "jdwp"});
+        byte[] buffer = new byte[1024];
+        p.getInputStream().read(buffer, 0, 1024);
+        String[] pids = new String(buffer).split("\n");
+        String pid = pids[pids.length - 2];
+        fs.run("/opt/android-sdk/platform-tools/adb", "forward", "tcp:29882", "jdwp:" + pid);
     }
     
 }
