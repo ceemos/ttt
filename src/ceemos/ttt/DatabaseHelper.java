@@ -15,6 +15,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String KEY_NOTES = "notes";
     public static final String KEY_COLOR = "color";
     public static final String KEY_PRIORITY = "prio";
+    public static final String KEY_TIMESTAMP = "ts";
+    public static final String KEY_TASKID = "tid";
+    public static final String KEY_TIME = "t";
+    public static final String KEY_TIME_SUM = "sumt";
     // Database creation sql statement
     private static final String DATABASE_CREATE =
             "create table task (_id integer primary key autoincrement, "

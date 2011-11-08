@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.os.Handler;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.LayoutInflater;
@@ -34,12 +35,8 @@ public class TttActivity extends TabActivity {
     
     private TaskDbAdapter taskHelper;
     private TodoDbAdapter todoHelper;
+    private TimeDbAdapter timeHelper;
     
-    
-    static String[] COUNTRIES = new String[]{
-        "Afghanistan", "Albania", "Algeria", "American Samoa", "Andorra",
-        "Angola", "Anguilla", "Antarctica", "Antigua and Barbuda", "Argentina"};
-
     private void fillData() {
         Cursor cursor;
         cursor = taskHelper.fetchAllTasks();
@@ -54,12 +51,20 @@ public class TttActivity extends TabActivity {
         tasklist.setAdapter(tasks);
         
         cursor = todoHelper.fetchAllTodos();
-        from = new String[]{KEY_LABEL, KEY_NOTES, KEY_ROWID};
-        to = new int[]{R.id.todolabel, R.id.todoextra, R.id.tododone};
+        from = new String[]{KEY_LABEL,      KEY_NOTES,      KEY_ROWID};
+        to =      new int[]{R.id.todolabel, R.id.todoextra, R.id.tododone};
         SimpleCursorAdapter todos = 
                 new SimpleCursorAdapter(this, R.layout.todoentry, cursor, from, to);
         todos.setViewBinder(new Binder());
         todolist.setAdapter(todos);
+        
+        cursor = timeHelper.fetchAllTimes();
+        from = new String[]{KEY_LABEL,      KEY_COLOR,       KEY_TIME_SUM,  KEY_ROWID};
+        to =      new int[]{R.id.timelabel, R.id.timelayout, R.id.timetime, R.id.timelayout};
+        SimpleCursorAdapter times = 
+                new SimpleCursorAdapter(this, R.layout.timeentry, cursor, from, to);
+        times.setViewBinder(new Binder());
+        timelist.setAdapter(times);
         
     }
     
@@ -86,6 +91,16 @@ public class TttActivity extends TabActivity {
         }
         
     }
+    
+    private TabHost.OnTabChangeListener tablistener = new TabHost.OnTabChangeListener() {
+
+        @Override
+        public void onTabChanged(String tabId) {
+            if("tab_time".equals(tabId)) {
+                fillData(); // Time-Tab heir nachladen, weil es nicht immer automatisch geschieht
+            }
+        }
+    };
 
     /** Called when the activity is first created. */
     @Override
@@ -97,12 +112,12 @@ public class TttActivity extends TabActivity {
 
         mTabHost = getTabHost();
 
-        mTabHost.addTab(mTabHost.newTabSpec("tab_test1").setIndicator("Tasks").setContent(R.id.listViewTasks));
-        mTabHost.addTab(mTabHost.newTabSpec("tab_test2").setIndicator("Time").setContent(R.id.listViewTime));
-        mTabHost.addTab(mTabHost.newTabSpec("tab_test2").setIndicator("ToDo").setContent(R.id.listViewTodo));
+        mTabHost.addTab(mTabHost.newTabSpec("tab_task").setIndicator("Tasks").setContent(R.id.listViewTasks));
+        mTabHost.addTab(mTabHost.newTabSpec("tab_time").setIndicator("Time").setContent(R.id.listViewTime));
+        mTabHost.addTab(mTabHost.newTabSpec("tab_todo").setIndicator("ToDo").setContent(R.id.listViewTodo));
         mTabHost.setCurrentTab(0);
-
-
+        
+        mTabHost.setOnTabChangedListener(tablistener);
 
         tasklist = (ListView) findViewById(R.id.listViewTasks);
         tasklist.addFooterView(inflater.inflate(R.layout.taskadd, null));
@@ -112,18 +127,18 @@ public class TttActivity extends TabActivity {
 
         taskHelper = new TaskDbAdapter(this);
         taskHelper.open();
-        
-        
+
         todolist = (ListView) findViewById(R.id.listViewTodo);
         todoHelper = new TodoDbAdapter(this);
         todoHelper.open();
         
-        fillData();
+        timeHelper = new TimeDbAdapter(this);
+        timeHelper.open();
+        timeHelper.setTimeBase(0);
         
         timelist = (ListView) findViewById(R.id.listViewTime);
-        timelist.setAdapter(new ArrayAdapter<String>(this, R.layout.timeentry, R.id.timelabel, COUNTRIES));
-
-
+        
+        fillData();
     }
 
     @Override
@@ -175,10 +190,7 @@ public class TttActivity extends TabActivity {
         return super.onContextItemSelected(item);
     }
     
-    
-    
-    
-
+  
     public void onTodoDone(View v) {
         final Button b = (Button) v;
         int id = (Integer) b.getTag();
@@ -213,6 +225,7 @@ public class TttActivity extends TabActivity {
                 todoHelper.createTodo(value, id);
                 taskHelper.incPriority(id);
                 fillData();
+                mTabHost.setCurrentTabByTag("tab_todo");
             }
         });
 
@@ -226,29 +239,87 @@ public class TttActivity extends TabActivity {
 
         alert.show();
     }
+    
+    Handler handler = new Handler();
+    Runnable timerTask = new Runnable() {
+
+        @Override
+        public void run() {
+            long diff = System.currentTimeMillis() - timerData.t_0;
+            int value = Math.round(diff / 60000.0f);
+            timerData.button.setText("" + value);
+            if (value < 0) {
+                timerData.button.setTextColor(0xFFFF0000);
+            } else {
+                timerData.button.setTextColor(0xFF00FF00);
+            }
+            handler.postDelayed(this, 60000);
+        }
+    };
+
+    private class TimerData {
+
+        long t_0;
+        Button button;
+        
+    }
+    
+    TimerData timerData = null;
+    
+    private void resetTimerButton() {
+        if(timerData != null) {
+            handler.removeCallbacks(timerTask);
+            timerData.button.setText("Start");
+            timerData.button.setTextColor(0xFF000000);
+        }
+    }
+    
+    private void startTimerButton(float min, View v){
+        resetTimerButton();
+        TimerData td = new TimerData();
+        td.t_0 = System.currentTimeMillis() + ((int) min * 60000);
+        View parent = (View) v.getParent();
+        td.button = (Button) parent.findViewById(R.id.buttonauto); 
+        timerData = td;
+        handler.postDelayed(timerTask, 100);
+        
+        taskHelper.incPriority((Integer) v.getTag());
+    }
+    
+    private void commitTime(float min, int id){
+        System.out.println("Commiting Time: " + min + "min, tid: " + id);
+        timeHelper.createTime(System.currentTimeMillis(), Math.round(min), id);
+    }
 
     public void onTask5min(View v) {
-        Button b = (Button) v;
-        b.setText("Awa");
+        commitTime(5.0f, (Integer) v.getTag());
+        startTimerButton(5.0f, v);
+        
     }
 
     public void onTask10min(View v) {
-        Button b = (Button) v;
-        b.setText("ToDo");
+        commitTime(10.0f, (Integer) v.getTag());
+        startTimerButton(10.0f, v);
     }
 
     public void onTask30min(View v) {
-        Button b = (Button) v;
-        b.setText("ToDo");
+        commitTime(30.0f, (Integer) v.getTag());
+        startTimerButton(30.0f, v);
     }
 
     public void onTask60min(View v) {
-        Button b = (Button) v;
-        b.setText("ToDo");
+        commitTime(60.0f, (Integer) v.getTag());
+        startTimerButton(60.0f, v);
     }
 
     public void onTaskStart(View v) {
-        Button b = (Button) v;
-        b.setText("Stop");
+        if(timerData != null && timerData.button == v) {
+            long diff = System.currentTimeMillis() - timerData.t_0;
+            int value = Math.round(diff / 60000.0f);
+            commitTime(value, (Integer) v.getTag());
+            resetTimerButton();
+        } else {
+            startTimerButton(0.0f, v);
+        }
     }
 }
