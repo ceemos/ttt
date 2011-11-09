@@ -15,7 +15,6 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
@@ -38,12 +37,15 @@ public class TttActivity extends TabActivity {
     private TimeDbAdapter timeHelper;
     
     private void fillData() {
+        
+        resetTimerButton();
+        
         Cursor cursor;
         cursor = taskHelper.fetchAllTasks();
         startManagingCursor(cursor);
 
-        String[] from = new String[]{KEY_LABEL, KEY_COLOR, KEY_ROWID};
-        int[] to = new int[]{R.id.tasktext, R.id.taskentrylayout, R.id.taskentrylayout};
+        String[] from = new String[]{KEY_LABEL,     KEY_COLOR,            KEY_ROWID};
+        int[] to =         new int[]{R.id.tasktext, R.id.taskentrylayout, R.id.taskentrylayout};
 
         SimpleCursorAdapter tasks = 
                 new SimpleCursorAdapter(this, R.layout.taskentry, cursor, from, to);
@@ -73,11 +75,18 @@ public class TttActivity extends TabActivity {
         @Override
         public boolean setViewValue(View view, Cursor cursor, int columnIndex) {
             if(cursor.getColumnName(columnIndex).equals("_id")){
-                view.setTag(cursor.getInt(columnIndex));
+                int tid = cursor.getInt(columnIndex);
+                view.setTag(tid);
                 if(view instanceof LinearLayout) {
                     LinearLayout ll = (LinearLayout) view;
                     for (View v : ll.getTouchables()) {
-                        v.setTag(cursor.getInt(columnIndex));
+                        v.setTag(tid);
+                    }
+                    if (timerData != null && timerData.id == tid) {
+                        View autobutton = ll.findViewById(R.id.buttonauto);
+                        if (autobutton != null) {
+                            setupTimerButton(timerData, (Button) autobutton);
+                        }
                     }
                 }
                 return true;
@@ -260,6 +269,7 @@ public class TttActivity extends TabActivity {
     private class TimerData {
 
         long t_0;
+        int id;
         Button button;
         
     }
@@ -279,11 +289,15 @@ public class TttActivity extends TabActivity {
         TimerData td = new TimerData();
         td.t_0 = System.currentTimeMillis() + ((int) min * 60000);
         View parent = (View) v.getParent();
-        td.button = (Button) parent.findViewById(R.id.buttonauto); 
+        setupTimerButton(td, (Button) parent.findViewById(R.id.buttonauto)); 
+        taskHelper.incPriority(td.id);
+    }
+    
+    private void setupTimerButton(TimerData td, Button b) {
+        td.button = b;
+        td.id = (Integer) td.button.getTag();
         timerData = td;
         handler.postDelayed(timerTask, 100);
-        
-        taskHelper.incPriority((Integer) v.getTag());
     }
     
     private void commitTime(float min, int id){
@@ -313,10 +327,10 @@ public class TttActivity extends TabActivity {
     }
 
     public void onTaskStart(View v) {
-        if(timerData != null && timerData.button == v) {
+        if(timerData != null && timerData.id == v.getTag()) {
             long diff = System.currentTimeMillis() - timerData.t_0;
             int value = Math.round(diff / 60000.0f);
-            commitTime(value, (Integer) v.getTag());
+            commitTime(value, timerData.id);
             resetTimerButton();
         } else {
             startTimerButton(0.0f, v);
