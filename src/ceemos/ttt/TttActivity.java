@@ -9,11 +9,13 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.inputmethod.EditorInfo;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
@@ -22,6 +24,8 @@ import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
 import android.widget.TabHost;
 
+import android.widget.TextView;
+import android.widget.TextView.OnEditorActionListener;
 import static ceemos.ttt.DatabaseHelper.*;
 
 public class TttActivity extends TabActivity {
@@ -129,8 +133,25 @@ public class TttActivity extends TabActivity {
         mTabHost.setOnTabChangedListener(tablistener);
 
         tasklist = (ListView) findViewById(R.id.listViewTasks);
-        tasklist.addFooterView(inflater.inflate(R.layout.taskadd, null));
+        View footer = inflater.inflate(R.layout.taskadd, null);
+        tasklist.addFooterView(footer);
+        EditText taskeditnew = (EditText) footer.findViewById(R.id.taskeditnew);
+        taskeditnew.setImeActionLabel("New", EditorInfo.IME_ACTION_DONE);
+        taskeditnew.setOnEditorActionListener(new OnEditorActionListener() {
+
+            @Override
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                if (actionId == EditorInfo.IME_ACTION_DONE) {
+                    onNewTask(null);
+                    
+                    return true;
+                }
+                return false;
+            }
+        });
+        
         registerForContextMenu(tasklist);
+        tasklist.setItemsCanFocus(true);
 
         editNewTask = (EditText) findViewById(R.id.taskeditnew);
 
@@ -330,6 +351,7 @@ public class TttActivity extends TabActivity {
         if(timerData != null && timerData.id == v.getTag()) {
             long diff = System.currentTimeMillis() - timerData.t_0;
             int value = Math.round(diff / 60000.0f);
+            timerData = null;
             commitTime(value, timerData.id);
             resetTimerButton();
         } else {
