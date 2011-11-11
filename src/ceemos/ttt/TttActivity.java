@@ -78,31 +78,35 @@ public class TttActivity extends TabActivity {
 
         @Override
         public boolean setViewValue(View view, Cursor cursor, int columnIndex) {
-            if(cursor.getColumnName(columnIndex).equals("_id")){
+            if (cursor.getColumnName(columnIndex).equals("_id")) {
                 int tid = cursor.getInt(columnIndex);
                 view.setTag(tid);
-                if(view instanceof LinearLayout) {
+                if (view instanceof LinearLayout) {
                     LinearLayout ll = (LinearLayout) view;
                     for (View v : ll.getTouchables()) {
                         v.setTag(tid);
                     }
-                    if (timerData != null && timerData.id == tid) {
+                    if (timerData != null) {
                         View autobutton = ll.findViewById(R.id.buttonauto);
                         if (autobutton != null) {
-                            setupTimerButton(timerData, (Button) autobutton);
-                        }
+                            if (timerData.id == tid) {
+                                setupTimerButton(timerData, (Button) autobutton);
+                            } else {
+                                resetButton((Button) autobutton);
+                            }
+                        } 
                     }
                 }
                 return true;
             } else if (cursor.getColumnName(columnIndex).equals(KEY_COLOR)) {
                 String color = cursor.getString(columnIndex);
                 int c = (Integer.parseInt(color) | 0xFF000000) & 0xFF7F7F7F;
-                view.setBackgroundColor(c);    
+                view.setBackgroundColor(c);
                 return true;
             }
             return false;
         }
-        
+
     }
     
     private TabHost.OnTabChangeListener tablistener = new TabHost.OnTabChangeListener() {
@@ -159,6 +163,7 @@ public class TttActivity extends TabActivity {
         taskHelper.open();
 
         todolist = (ListView) findViewById(R.id.listViewTodo);
+        todolist.setItemsCanFocus(true);
         todoHelper = new TodoDbAdapter(this);
         todoHelper.open();
         
@@ -300,11 +305,15 @@ public class TttActivity extends TabActivity {
     private void resetTimerButton() {
         if(timerData != null) {
             handler.removeCallbacks(timerTask);
-            timerData.button.setText("Start");
-            timerData.button.setTextColor(0xFF000000);
+            resetButton(timerData.button);
         }
     }
     
+    private void resetButton(Button b) {
+        timerData.button.setText("Start");
+        timerData.button.setTextColor(0xFF000000);
+    }
+
     private void startTimerButton(float min, View v){
         resetTimerButton();
         TimerData td = new TimerData();
