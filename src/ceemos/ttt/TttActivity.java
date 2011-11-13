@@ -360,9 +360,9 @@ public class TttActivity extends TabActivity {
         if(timerData != null && timerData.id == v.getTag()) {
             long diff = System.currentTimeMillis() - timerData.t_0;
             int value = Math.round(diff / 60000.0f);
-            timerData = null;
             commitTime(value, timerData.id);
             resetTimerButton();
+            timerData = null;
         } else {
             startTimerButton(0.0f, v);
         }
