@@ -26,6 +26,8 @@ import android.widget.TabHost;
 
 import android.widget.TextView;
 import android.widget.TextView.OnEditorActionListener;
+import java.util.Calendar;
+import java.util.Date;
 import static ceemos.ttt.DatabaseHelper.*;
 
 public class TttActivity extends TabActivity {
@@ -182,21 +184,33 @@ public class TttActivity extends TabActivity {
         inflater.inflate(R.menu.timebasemenu, menu);
         return true;
     }
+    
+    private void setTimeBase(long tsStart){
+        timeHelper.setTimeBase(tsStart);
+        fillData();
+    }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+        Calendar c = Calendar.getInstance();
+        c.setLenient(true);
         switch (item.getItemId()) {
             case R.id.tbDay:
-
+                c.set(c.get(Calendar.YEAR), c.get(Calendar.MONTH), c.get(Calendar.DAY_OF_MONTH), 0, 0);
+                setTimeBase(c.getTimeInMillis());
                 break;
             case R.id.tb7Days:
-
+                c.set(c.get(Calendar.YEAR), c.get(Calendar.MONTH), c.get(Calendar.DAY_OF_MONTH) - 7, 0, 0);
+                setTimeBase(c.getTimeInMillis());
                 break;
             case R.id.tbWeek:
-
+                c.set(Calendar.WEEK_OF_YEAR, c.get(Calendar.WEEK_OF_YEAR) - 1);
+                c.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
+                c.set(Calendar.HOUR_OF_DAY, 0);
+                setTimeBase(c.getTimeInMillis());
                 break;
             case R.id.tbEver:
-
+                setTimeBase(0);
                 break;
         }
         return true;

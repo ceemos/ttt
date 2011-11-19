@@ -36,6 +36,7 @@ public class TimeDbAdapter {
     }
     
     public void setTimeBase(long ts_start) {
+        database.execSQL("drop view if exists timelist;");
         database.execSQL("create temp view timelist as "
                 + "select task._id, task.label, task.color, sum(time.t) as sumt "
                 + "from time "
